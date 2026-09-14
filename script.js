@@ -7,11 +7,23 @@ const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
 // Serveurs vidéo de secours mis à jour
 const PLAYERS = [
-  { name: 'Lecteur 1 (SuperEmbed)', url: 'https://multiembed.mov/?video_id=' },
-  { name: 'Lecteur 2 (AutoEmbed)', url: 'https://player.autoembed.cc/embed/movie/' },
-  { name: 'Lecteur 3 (VidSrc me)', url: 'https://vidsrc.me/embed/movie?tmdb=' },
+  const PLAYERS = [
+  { name: 'Lecteur 1 (AutoEmbed)', url: 'https://player.autoembed.cc/embed/movie/' },
+  { name: 'Lecteur 2 (VidSrc me)', url: 'https://vidsrc.me/embed/movie?tmdb=' },
+  { name: 'Lecteur 3 (SuperEmbed)', url: 'https://multiembed.mov/?video_id=' },
   { name: 'Lecteur 4 (2Embed)', url: 'https://www.2embed.cc/embed/' }
 ];
+
+function loadStream() {
+  const server = PLAYERS[selectedServerIndex];
+  if (videoPlayer) {
+    if (server.url.includes('multiembed')) {
+      videoPlayer.src = `${server.url}${activeMovieId}&tmdb=1`;
+    } else {
+      videoPlayer.src = `${server.url}${activeMovieId}`;
+    }
+  }
+}
 
 let activeMovieId = null;
 let selectedServerIndex = 0;
