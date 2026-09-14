@@ -6,15 +6,15 @@ const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
 // Lecteurs vidéo optimisés pour le contenu multilingue / VF
 const PLAYERS = {
-  movie: [
-    { name: 'Lecteur 1 (VF / Multi)', url: 'https://vidsrc.me/embed/movie?tmdb=' },
-    { name: 'Lecteur 2 (AutoEmbed)', url: 'https://player.autoembed.cc/embed/movie/' },
-    { name: 'Lecteur 3 (SuperEmbed)', url: 'https://multiembed.mov/?video_id=' }
+ movie: [
+    { name: 'Lecteur 1 (VF / STFR)', url: 'https://vidsrc.me/embed/movie?tmdb=' },
+    { name: 'Lecteur 2 (AutoEmbed + STFR)', url: 'https://player.autoembed.cc/embed/movie/' },
+    { name: 'Lecteur 3 (VidSrc SBS + STFR)', url: 'https://vidsrc.sbs/embed/movie/' }
   ],
   tv: [
-    { name: 'Lecteur 1 (VF / Multi)', url: (id, s, e) => `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
-    { name: 'Lecteur 2 (AutoEmbed)', url: (id, s, e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}` },
-    { name: 'Lecteur 3 (SuperEmbed)', url: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` }
+    { name: 'Lecteur 1 (VF / STFR)', url: (id, s, e) => `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}&sub=fr` },
+    { name: 'Lecteur 2 (AutoEmbed + STFR)', url: (id, s, e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}` },
+    { name: 'Lecteur 3 (VidSrc SBS + STFR)', url: (id, s, e) => `https://vidsrc.sbs/embed/tv/${id}/${s}/${e}?sub=fr` }
   ]
 };
 
@@ -279,11 +279,14 @@ function onEpisodeChange() {
 }
 
 function loadStream() {
-  if (currentMediaType === 'movie') {
+ if (currentMediaType === 'movie') {
     const server = PLAYERS.movie[selectedServerIndex];
     if (videoPlayer) {
-      if (server.url.includes('multiembed')) {
-        videoPlayer.src = `${server.url}${activeMediaId}&tmdb=1`;
+      if (server.url.includes('vidsrc.me')) {
+        // Force la langue française et sous-titres FR
+        videoPlayer.src = `${server.url}${activeMediaId}&sub=fr&lang=fr`;
+      } else if (server.url.includes('vidsrc.sbs')) {
+        videoPlayer.src = `${server.url}${activeMediaId}?sub=fr`;
       } else {
         videoPlayer.src = `${server.url}${activeMediaId}`;
       }
