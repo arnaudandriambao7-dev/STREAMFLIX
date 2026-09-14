@@ -5,7 +5,7 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
-// Serveurs vidéo de secours
+// Serveurs vidéo de secours (Embeds stables en HTTPS)
 const PLAYERS = [
   { name: 'Lecteur 1', url: 'https://vidsrc.xyz/embed/movie/' },
   { name: 'Lecteur 2', url: 'https://vidsrc.me/embed/movie?tmdb=' },
@@ -34,10 +34,11 @@ async function init() {
   loadAllCategories();
 }
 
-// Récupérer les données depuis l'API TMDB
-async function fetchMovies(endpoint) {
+// Récupérer les données depuis l'API TMDB (Correction des paramètres URL)
+async function fetchMovies(endpoint, extraParams = '') {
   try {
-    const res = await fetch(`${BASE_URL}${endpoint}?api_key=${API_KEY}&language=fr-FR`);
+    const connector = endpoint.includes('?') ? '&' : '?';
+    const res = await fetch(`${BASE_URL}${endpoint}${connector}api_key=${API_KEY}&language=fr-FR${extraParams}`);
     const data = await res.json();
     return data.results || [];
   } catch (error) {
@@ -49,23 +50,27 @@ async function fetchMovies(endpoint) {
 // Charger tous les genres et créer une section par catégorie
 async function loadAllCategories() {
   try {
-    // Récupère la liste complète des genres (Action, Comédie, etc.)
     const res = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=fr-FR`);
     const data = await res.json();
-    const genres = data.genres;
+    const genres = data.genres || [];
 
-    categoriesContainer.innerHTML = ''; // Vider le message de chargement
+    if (categoriesContainer) {
+      categoriesContainer.innerHTML = ''; // Vider le message de chargement
+    }
 
     // Parcourir chaque genre et afficher ses films
     for (const genre of genres) {
-      const movies = await fetchMovies(`/discover/movie&with_genres=${genre.id}`);
+      const movies = await fetchMovies('/discover/movie', `&with_genres=${genre.id}`);
       
-      if (movies.length > 0) {
+      if (movies && movies.length > 0) {
         renderCategorySection(genre.name, movies);
       }
     }
   } catch (error) {
     console.error("Erreur lors du chargement des catégories:", error);
+    if (categoriesContainer) {
+      categoriesContainer.innerHTML = '<p style="color: #ff4d4d; text-align: center; margin-top: 50px;">Erreur de chargement du catalogue. Veuillez rafraîchir la page.</p>';
+    }
   }
 }
 
@@ -101,42 +106,56 @@ function renderCategorySection(title, movies) {
 
   section.appendChild(categoryTitle);
   section.appendChild(grid);
-  categoriesContainer.appendChild(section);
+  if (categoriesContainer) {
+    categoriesContainer.appendChild(section);
+  }
 }
 
 // Configurer la bannière principale
 function setupHero(movie) {
   const hero = document.getElementById('hero');
+  if (!hero) return;
+
   document.getElementById('hero-title').textContent = movie.title || movie.original_title;
   document.getElementById('hero-overview').textContent = movie.overview || "Aucun synopsis disponible.";
-  hero.style.backgroundImage = `url('${HERO_IMG_URL + movie.backdrop_path}')`;
+  if (movie.backdrop_path) {
+    hero.style.backgroundImage = `url('${HERO_IMG_URL + movie.backdrop_path}')`;
+  }
   
   document.getElementById('hero-play-btn').onclick = () => openPlayer(movie.id);
 }
 
 // Gestion de la recherche
-searchInput.addEventListener('input', async (e) => {
-  const query = e.target.value.trim();
-  if (query.length > 2) {
-    const searchResults = await fetchMovies(`/search/movie&query=${encodeURIComponent(query)}`);
-    categoriesContainer.innerHTML = '';
-    renderCategorySection(`Résultats pour "${query}"`, searchResults);
-  } else if (query === '') {
-    init();
-  }
-});
+if (searchInput) {
+  searchInput.addEventListener('input', async (e) => {
+    const query = e.target.value.trim();
+    if (query.length > 2) {
+      const searchResults = await fetchMovies('/search/movie', `&query=${encodeURIComponent(query)}`);
+      if (categoriesContainer) {
+        categoriesContainer.innerHTML = '';
+        renderCategorySection(`Résultats pour "${query}"`, searchResults);
+      }
+    } else if (query === '') {
+      init();
+    }
+  });
+}
 
 // Lecteur Vidéo
 function openPlayer(movieId) {
   activeMovieId = movieId;
   selectedServerIndex = 0;
   loadStream();
-  videoModal.style.display = 'flex';
+  if (videoModal) {
+    videoModal.style.display = 'flex';
+  }
 }
 
 function loadStream() {
   const server = PLAYERS[selectedServerIndex];
-  videoPlayer.src = `${server.url}${activeMovieId}`;
+  if (videoPlayer) {
+    videoPlayer.src = `${server.url}${activeMovieId}`;
+  }
 }
 
 function changeServer(index) {
@@ -144,15 +163,17 @@ function changeServer(index) {
   loadStream();
 }
 
-closeModal.onclick = () => {
-  videoModal.style.display = 'none';
-  videoPlayer.src = '';
-};
+if (closeModal) {
+  closeModal.onclick = () => {
+    if (videoModal) videoModal.style.display = 'none';
+    if (videoPlayer) videoPlayer.src = '';
+  };
+}
 
 window.onclick = (e) => {
   if (e.target === videoModal) {
-    videoModal.style.display = 'none';
-    videoPlayer.src = '';
+    if (videoModal) videoModal.style.display = 'none';
+    if (videoPlayer) videoPlayer.src = '';
   }
 };
 
