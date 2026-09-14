@@ -181,4 +181,13 @@ window.onclick = (e) => {
   }
 };
 
+function openExternal() {
+  const server = PLAYERS[selectedServerIndex];
+  let url = `${server.url}${activeMovieId}`;
+  if (server.url.includes('multiembed')) {
+    url = `${server.url}${activeMovieId}&tmdb=1`;
+  }
+  window.open(url, '_blank');
+}
+
 init();
