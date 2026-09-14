@@ -5,8 +5,16 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
-// URL pour les serveurs de lecteur vidéo tierce (Embed)
-const EMBED_URL = 'https://vidsrc.to/embed/movie/';
+// Serveurs vidéo de secours (Embeds stables en HTTPS)
+const PLAYERS = [
+  { name: 'Lecteur 1 (Principal)', url: 'https://vidsrc.xyz/embed/movie/' },
+  { name: 'Lecteur 2 (Rapide)', url: 'https://vidsrc.me/embed/movie?tmdb=' },
+  { name: 'Lecteur 3 (Multi-langues)', url: 'https://www.2embed.cc/embed/' },
+  { name: 'Lecteur 4 (Secours)', url: 'https://vidsrc.to/embed/movie/' }
+];
+
+let activeMovieId = null;
+let selectedServerIndex = 0;
 
 const movieGrid = document.getElementById('movie-grid');
 const searchInput = document.getElementById('search-input');
@@ -14,31 +22,42 @@ const videoModal = document.getElementById('video-modal');
 const videoPlayer = document.getElementById('video-player');
 const closeModal = document.getElementById('close-modal');
 
-// Initialisation
+// Initialisation avec chargement étendu
 async function init() {
-  const movies = await fetchMovies('/trending/movie/week');
-  if (movies && movies.length > 0) {
-    setupHero(movies[0]);
-    displayMovies(movies);
+  // Récupérer un large catalogue (Populaires + Tendances)
+  const popularMovies = await fetchMovies('/movie/popular');
+  const trendingMovies = await fetchMovies('/trending/movie/week');
+  
+  // Fusionner pour éviter les doublons
+  const allMovies = [...popularMovies, ...trendingMovies];
+  const uniqueMovies = Array.from(new Set(allMovies.map(a => a.id)))
+    .map(id => allMovies.find(a => a.id === id));
+
+  if (uniqueMovies.length > 0) {
+    // Sélection d'un grand film pour le Hero
+    const heroMovie = uniqueMovies[Math.floor(Math.random() * 5)];
+    setupHero(heroMovie);
+    displayMovies(uniqueMovies);
   }
 }
 
 // Récupérer les données via TMDB API
 async function fetchMovies(endpoint) {
   try {
-    const res = await fetch(`${BASE_URL}${endpoint}?api_key=${API_KEY}&language=fr-FR`);
+    const res = await fetch(`${BASE_URL}${endpoint}?api_key=${API_KEY}&language=fr-FR&page=1`);
     const data = await res.json();
-    return data.results;
+    return data.results || [];
   } catch (error) {
     console.error("Erreur lors de la récupération des films:", error);
+    return [];
   }
 }
 
 // Configurer la bannière principale
 function setupHero(movie) {
   const hero = document.getElementById('hero');
-  document.getElementById('hero-title').textContent = movie.title;
-  document.getElementById('hero-overview').textContent = movie.overview;
+  document.getElementById('hero-title').textContent = movie.title || movie.original_title;
+  document.getElementById('hero-overview').textContent = movie.overview || "Aucun synopsis disponible.";
   hero.style.backgroundImage = `url('${HERO_IMG_URL + movie.backdrop_path}')`;
   
   document.getElementById('hero-play-btn').onclick = () => openPlayer(movie.id);
@@ -57,7 +76,7 @@ function displayMovies(movies) {
       <div class="movie-info">
         <h3>${movie.title}</h3>
         <div class="movie-rating">
-          <i class="fa-solid fa-star"></i> ${movie.vote_average.toFixed(1)}
+          <i class="fa-solid fa-star"></i> ${(movie.vote_average || 0).toFixed(1)}
         </div>
       </div>
     `;
@@ -77,10 +96,23 @@ searchInput.addEventListener('input', async (e) => {
   }
 });
 
-// Ouvrir le lecteur vidéo
+// Ouvrir le lecteur vidéo avec barre de choix du serveur
 function openPlayer(movieId) {
-  videoPlayer.src = `${EMBED_URL}${movieId}`;
+  activeMovieId = movieId;
+  selectedServerIndex = 0;
+  loadStream();
   videoModal.style.display = 'flex';
+}
+
+function loadStream() {
+  const server = PLAYERS[selectedServerIndex];
+  videoPlayer.src = `${server.url}${activeMovieId}`;
+}
+
+// Changer de lecteur de vidéo si le premier ne fonctionne pas
+function changeServer(index) {
+  selectedServerIndex = index;
+  loadStream();
 }
 
 // Fermer le lecteur vidéo
