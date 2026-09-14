@@ -5,12 +5,12 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
-// Serveurs vidéo de secours (Embeds stables en HTTPS)
+// Serveurs vidéo de secours mis à jour
 const PLAYERS = [
-  { name: 'Lecteur 1', url: 'https://vidsrc.xyz/embed/movie/' },
-  { name: 'Lecteur 2', url: 'https://vidsrc.me/embed/movie?tmdb=' },
-  { name: 'Lecteur 3', url: 'https://www.2embed.cc/embed/' },
-  { name: 'Lecteur 4', url: 'https://vidsrc.to/embed/movie/' }
+  { name: 'Lecteur 1 (Vidbinge)', url: 'https://vidbinge.dev/embed/movie/' },
+  { name: 'Lecteur 2 (VidSrc Pro)', url: 'https://vidsrc.pro/embed/movie/' },
+  { name: 'Lecteur 3 (SuperEmbed)', url: 'https://multiembed.mov/?video_id=' },
+  { name: 'Lecteur 4 (AutoEmbed)', url: 'https://player.autoembed.cc/embed/movie/' }
 ];
 
 let activeMovieId = null;
