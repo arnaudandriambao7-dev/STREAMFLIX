@@ -5,70 +5,85 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
-// Serveurs vidéo de secours (Embeds stables en HTTPS)
+// Serveurs vidéo de secours
 const PLAYERS = [
-  { name: 'Lecteur 1 (Principal)', url: 'https://vidsrc.xyz/embed/movie/' },
-  { name: 'Lecteur 2 (Rapide)', url: 'https://vidsrc.me/embed/movie?tmdb=' },
-  { name: 'Lecteur 3 (Multi-langues)', url: 'https://www.2embed.cc/embed/' },
-  { name: 'Lecteur 4 (Secours)', url: 'https://vidsrc.to/embed/movie/' }
+  { name: 'Lecteur 1', url: 'https://vidsrc.xyz/embed/movie/' },
+  { name: 'Lecteur 2', url: 'https://vidsrc.me/embed/movie?tmdb=' },
+  { name: 'Lecteur 3', url: 'https://www.2embed.cc/embed/' },
+  { name: 'Lecteur 4', url: 'https://vidsrc.to/embed/movie/' }
 ];
 
 let activeMovieId = null;
 let selectedServerIndex = 0;
 
-const movieGrid = document.getElementById('movie-grid');
 const searchInput = document.getElementById('search-input');
 const videoModal = document.getElementById('video-modal');
 const videoPlayer = document.getElementById('video-player');
 const closeModal = document.getElementById('close-modal');
+const categoriesContainer = document.getElementById('categories-container');
 
-// Initialisation avec chargement étendu
+// Initialisation globale
 async function init() {
-  // Récupérer un large catalogue (Populaires + Tendances)
-  const popularMovies = await fetchMovies('/movie/popular');
-  const trendingMovies = await fetchMovies('/trending/movie/week');
-  
-  // Fusionner pour éviter les doublons
-  const allMovies = [...popularMovies, ...trendingMovies];
-  const uniqueMovies = Array.from(new Set(allMovies.map(a => a.id)))
-    .map(id => allMovies.find(a => a.id === id));
-
-  if (uniqueMovies.length > 0) {
-    // Sélection d'un grand film pour le Hero
-    const heroMovie = uniqueMovies[Math.floor(Math.random() * 5)];
-    setupHero(heroMovie);
-    displayMovies(uniqueMovies);
+  // 1. Charger le Hero Banner avec un film tendance
+  const trending = await fetchMovies('/trending/movie/week');
+  if (trending && trending.length > 0) {
+    setupHero(trending[0]);
   }
+
+  // 2. Charger toutes les catégories par genre
+  loadAllCategories();
 }
 
-// Récupérer les données via TMDB API
+// Récupérer les données depuis l'API TMDB
 async function fetchMovies(endpoint) {
   try {
-    const res = await fetch(`${BASE_URL}${endpoint}?api_key=${API_KEY}&language=fr-FR&page=1`);
+    const res = await fetch(`${BASE_URL}${endpoint}?api_key=${API_KEY}&language=fr-FR`);
     const data = await res.json();
     return data.results || [];
   } catch (error) {
-    console.error("Erreur lors de la récupération des films:", error);
+    console.error("Erreur API:", error);
     return [];
   }
 }
 
-// Configurer la bannière principale
-function setupHero(movie) {
-  const hero = document.getElementById('hero');
-  document.getElementById('hero-title').textContent = movie.title || movie.original_title;
-  document.getElementById('hero-overview').textContent = movie.overview || "Aucun synopsis disponible.";
-  hero.style.backgroundImage = `url('${HERO_IMG_URL + movie.backdrop_path}')`;
-  
-  document.getElementById('hero-play-btn').onclick = () => openPlayer(movie.id);
+// Charger tous les genres et créer une section par catégorie
+async function loadAllCategories() {
+  try {
+    // Récupère la liste complète des genres (Action, Comédie, etc.)
+    const res = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=fr-FR`);
+    const data = await res.json();
+    const genres = data.genres;
+
+    categoriesContainer.innerHTML = ''; // Vider le message de chargement
+
+    // Parcourir chaque genre et afficher ses films
+    for (const genre of genres) {
+      const movies = await fetchMovies(`/discover/movie&with_genres=${genre.id}`);
+      
+      if (movies.length > 0) {
+        renderCategorySection(genre.name, movies);
+      }
+    }
+  } catch (error) {
+    console.error("Erreur lors du chargement des catégories:", error);
+  }
 }
 
-// Afficher la grille de films
-function displayMovies(movies) {
-  movieGrid.innerHTML = '';
+// Afficher une section de catégorie spécifique
+function renderCategorySection(title, movies) {
+  const section = document.createElement('section');
+  section.style.marginBottom = '40px';
+
+  const categoryTitle = document.createElement('h2');
+  categoryTitle.classList.add('section-title');
+  categoryTitle.textContent = title;
+
+  const grid = document.createElement('div');
+  grid.classList.add('movie-grid');
+
   movies.forEach(movie => {
     if (!movie.poster_path) return;
-    
+
     const card = document.createElement('div');
     card.classList.add('movie-card');
     card.innerHTML = `
@@ -81,22 +96,37 @@ function displayMovies(movies) {
       </div>
     `;
     card.onclick = () => openPlayer(movie.id);
-    movieGrid.appendChild(card);
+    grid.appendChild(card);
   });
+
+  section.appendChild(categoryTitle);
+  section.appendChild(grid);
+  categoriesContainer.appendChild(section);
 }
 
-// Gestion de la recherche dynamique
+// Configurer la bannière principale
+function setupHero(movie) {
+  const hero = document.getElementById('hero');
+  document.getElementById('hero-title').textContent = movie.title || movie.original_title;
+  document.getElementById('hero-overview').textContent = movie.overview || "Aucun synopsis disponible.";
+  hero.style.backgroundImage = `url('${HERO_IMG_URL + movie.backdrop_path}')`;
+  
+  document.getElementById('hero-play-btn').onclick = () => openPlayer(movie.id);
+}
+
+// Gestion de la recherche
 searchInput.addEventListener('input', async (e) => {
   const query = e.target.value.trim();
   if (query.length > 2) {
-    const searchResults = await fetchMovies(`/search/movie?query=${encodeURIComponent(query)}`);
-    displayMovies(searchResults);
+    const searchResults = await fetchMovies(`/search/movie&query=${encodeURIComponent(query)}`);
+    categoriesContainer.innerHTML = '';
+    renderCategorySection(`Résultats pour "${query}"`, searchResults);
   } else if (query === '') {
     init();
   }
 });
 
-// Ouvrir le lecteur vidéo avec barre de choix du serveur
+// Lecteur Vidéo
 function openPlayer(movieId) {
   activeMovieId = movieId;
   selectedServerIndex = 0;
@@ -109,13 +139,11 @@ function loadStream() {
   videoPlayer.src = `${server.url}${activeMovieId}`;
 }
 
-// Changer de lecteur de vidéo si le premier ne fonctionne pas
 function changeServer(index) {
   selectedServerIndex = index;
   loadStream();
 }
 
-// Fermer le lecteur vidéo
 closeModal.onclick = () => {
   videoModal.style.display = 'none';
   videoPlayer.src = '';
