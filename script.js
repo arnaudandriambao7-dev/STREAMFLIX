@@ -4,7 +4,7 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
-// Serveurs supportant Films ET Séries
+// Lecteurs vidéo compatibles Films et Séries
 const PLAYERS = {
   movie: [
     { name: 'AutoEmbed', url: 'https://player.autoembed.cc/embed/movie/' },
@@ -18,13 +18,14 @@ const PLAYERS = {
   ]
 };
 
-let currentMediaType = 'movie'; // 'movie' ou 'tv'
+let currentMediaType = 'movie'; 
 let activeMediaId = null;
 let selectedServerIndex = 0;
 let currentSeason = 1;
 let currentEpisode = 1;
 
 const searchInput = document.getElementById('search-input');
+const genreSelect = document.getElementById('genre-select');
 const videoModal = document.getElementById('video-modal');
 const videoPlayer = document.getElementById('video-player');
 const closeModal = document.getElementById('close-modal');
@@ -33,7 +34,20 @@ const tvControls = document.getElementById('tv-controls');
 const seasonSelect = document.getElementById('season-select');
 const episodeSelect = document.getElementById('episode-select');
 
-// Basculer entre Films et Séries TV
+// Initialisation
+async function init() {
+  const endpoint = currentMediaType === 'movie' ? '/trending/movie/week' : '/trending/tv/week';
+  const trending = await fetchMovies(endpoint);
+  
+  if (trending && trending.length > 0) {
+    setupHero(trending[0]);
+  }
+  
+  await populateGenreDropdown();
+  loadAllCategories();
+}
+
+// Basculer entre Films et Séries
 function switchMediaType(type) {
   currentMediaType = type;
   
@@ -43,21 +57,13 @@ function switchMediaType(type) {
   document.getElementById('btn-series').style.color = type === 'tv' ? '#fff' : '#aaa';
   document.getElementById('btn-series').style.borderBottom = type === 'tv' ? '2px solid #e50914' : 'none';
 
+  if (genreSelect) genreSelect.value = 'all';
+  if (searchInput) searchInput.value = '';
+
   init();
 }
 
-// Initialisation globale
-async function init() {
-  const endpoint = currentMediaType === 'movie' ? '/trending/movie/week' : '/trending/tv/week';
-  const trending = await fetchMovies(endpoint);
-  
-  if (trending && trending.length > 0) {
-    setupHero(trending[0]);
-  }
-  loadAllCategories();
-}
-
-// Effectuer les requêtes API TMDB
+// Requêtes TMDB
 async function fetchMovies(endpoint, extraParams = '') {
   try {
     const connector = endpoint.includes('?') ? '&' : '?';
@@ -70,7 +76,50 @@ async function fetchMovies(endpoint, extraParams = '') {
   }
 }
 
-// Charger le catalogue par genre
+// Remplir le menu des genres
+async function populateGenreDropdown() {
+  if (!genreSelect) return;
+  try {
+    const genreEndpoint = `/genre/${currentMediaType}/list`;
+    const res = await fetch(`${BASE_URL}${genreEndpoint}?api_key=${API_KEY}&language=fr-FR`);
+    const data = await res.json();
+    const genres = data.genres || [];
+
+    genreSelect.innerHTML = '<option value="all">Tous les genres</option>';
+    genres.forEach(genre => {
+      const option = document.createElement('option');
+      option.value = genre.id;
+      option.textContent = genre.name;
+      genreSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Erreur chargement genres:", error);
+  }
+}
+
+// Filtrage par genre
+async function filterByGenre() {
+  const selectedGenreId = genreSelect.value;
+  
+  if (selectedGenreId === 'all') {
+    loadAllCategories();
+    return;
+  }
+
+  if (categoriesContainer) categoriesContainer.innerHTML = '<p style="color: #aaa; text-align: center; margin-top: 50px;">Chargement...</p>';
+  
+  const selectedGenreName = genreSelect.options[genreSelect.selectedIndex].text;
+  const mediaList = await fetchMovies(`/discover/${currentMediaType}`, `&with_genres=${selectedGenreId}`);
+  
+  if (categoriesContainer) categoriesContainer.innerHTML = '';
+  if (mediaList && mediaList.length > 0) {
+    renderCategorySection(`Genre : ${selectedGenreName}`, mediaList);
+  } else {
+    categoriesContainer.innerHTML = '<p style="color: #aaa; text-align: center; margin-top: 50px;">Aucun titre trouvé.</p>';
+  }
+}
+
+// Charger tous les genres sur la page principale
 async function loadAllCategories() {
   try {
     const genreEndpoint = `/genre/${currentMediaType}/list`;
@@ -91,7 +140,7 @@ async function loadAllCategories() {
   }
 }
 
-// Afficher une section de catégorie
+// Générer une section
 function renderCategorySection(title, items) {
   const section = document.createElement('section');
   section.style.marginBottom = '40px';
@@ -127,7 +176,7 @@ function renderCategorySection(title, items) {
   if (categoriesContainer) categoriesContainer.appendChild(section);
 }
 
-// Bannière Hero
+// Configurer Hero Banner
 function setupHero(item) {
   const hero = document.getElementById('hero');
   if (!hero) return;
@@ -156,7 +205,7 @@ if (searchInput) {
   });
 }
 
-// Ouverture du lecteur vidéo
+// Modal & Lecteur
 async function openPlayer(mediaId) {
   activeMediaId = mediaId;
   selectedServerIndex = 0;
@@ -174,7 +223,7 @@ async function openPlayer(mediaId) {
   if (videoModal) videoModal.style.display = 'flex';
 }
 
-// Récupérer et remplir les saisons et épisodes
+// Gestion Séries
 async function setupTvSeasons(seriesId) {
   try {
     const res = await fetch(`${BASE_URL}/tv/${seriesId}?api_key=${API_KEY}&language=fr-FR`);
@@ -229,7 +278,6 @@ function onEpisodeChange() {
   loadStream();
 }
 
-// Charger le flux dans l'Iframe
 function loadStream() {
   if (currentMediaType === 'movie') {
     const server = PLAYERS.movie[selectedServerIndex];
