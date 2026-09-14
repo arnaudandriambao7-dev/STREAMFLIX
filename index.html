@@ -17,7 +17,7 @@
     </div>
     <div class="search-box">
       <i class="fa-solid fa-magnifying-glass search-icon"></i>
-      <input type="text" id="search-input" placeholder="Rechercher un film, une série...">
+      <input type="text" id="search-input" placeholder="Rechercher un film...">
     </div>
   </header>
 
@@ -33,24 +33,26 @@
     </div>
   </section>
 
-  <!-- Contenu principal -->
-  <main class="container">
-    <h2 class="section-title">Films Tendances</h2>
-    <div class="movie-grid" id="movie-grid"></div>
+  <!-- Contenu principal : Les catégories s'afficheront ici dynamiquement -->
+  <main class="container" id="categories-container">
+    <p style="color: #aaa; text-align: center; margin-top: 50px;">Chargement de toutes les catégories...</p>
   </main>
 
-  <!-- Lecteur Vidéo Modal -->
+  <!-- Lecteur Vidéo Modal avec changement de serveur -->
   <div class="modal" id="video-modal">
     <div class="modal-content">
       <span class="close-modal" id="close-modal">&times;</span>
+      
+      <!-- Boutons pour changer de serveur si le film ne se lance pas -->
+      <div class="server-selector" style="margin-bottom: 15px; text-align: center; padding-top: 10px;">
+        <span style="font-size: 0.85rem; color: #aaa; margin-right: 10px;">Changer de lecteur :</span>
+        <button onclick="changeServer(0)" style="background:#e50914; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 1</button>
+        <button onclick="changeServer(1)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 2</button>
+        <button onclick="changeServer(2)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 3</button>
+        <button onclick="changeServer(3)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 4</button>
+      </div>
+
       <div class="iframe-container">
-        <div class="server-selector" style="margin-bottom: 15px; text-align: center;">
-  <span style="font-size: 0.85rem; color: #aaa; margin-right: 10px;">Changer de lecteur :</span>
-  <button onclick="changeServer(0)" style="background:#e50914; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 1</button>
-  <button onclick="changeServer(1)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 2</button>
-  <button onclick="changeServer(2)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 3</button>
-  <button onclick="changeServer(3)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 4</button>
-</div>
         <iframe id="video-player" src="" frameborder="0" allowfullscreen></iframe>
       </div>
     </div>
