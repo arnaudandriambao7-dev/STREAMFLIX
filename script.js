@@ -154,7 +154,11 @@ function openPlayer(movieId) {
 function loadStream() {
   const server = PLAYERS[selectedServerIndex];
   if (videoPlayer) {
-    videoPlayer.src = `${server.url}${activeMovieId}`;
+    if (server.url.includes('multiembed')) {
+      videoPlayer.src = `${server.url}${activeMovieId}&tmdb=1`;
+    } else {
+      videoPlayer.src = `${server.url}${activeMovieId}`;
+    }
   }
 }
 
