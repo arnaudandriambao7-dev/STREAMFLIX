@@ -15,15 +15,23 @@
       <i class="fa-solid fa-play"></i> Ciné<span>Stream</span>
     </div>
 
-    <!-- Selecteur de Type : Films ou Séries -->
+    <!-- Sélecteur Films / Séries -->
     <div class="nav-tabs" style="display: flex; gap: 15px;">
       <button id="btn-movies" class="tab-btn active" onclick="switchMediaType('movie')" style="background:transparent; color:#fff; border:none; font-size:1rem; cursor:pointer; font-weight:600; border-bottom: 2px solid #e50914;">Films</button>
       <button id="btn-series" class="tab-btn" onclick="switchMediaType('tv')" style="background:transparent; color:#aaa; border:none; font-size:1rem; cursor:pointer; font-weight:600;">Séries TV</button>
     </div>
 
-    <div class="search-box">
-      <i class="fa-solid fa-magnifying-glass search-icon"></i>
-      <input type="text" id="search-input" placeholder="Rechercher un film ou une série...">
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <!-- Menu déroulant de filtrage par genre -->
+      <select id="genre-select" onchange="filterByGenre()" style="background: #1f1f2e; color: #fff; border: 1px solid #333; padding: 8px 12px; border-radius: 20px; font-size: 0.9rem; cursor: pointer;">
+        <option value="all">Tous les genres</option>
+      </select>
+
+      <!-- Barre de recherche -->
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="search-input" placeholder="Rechercher...">
+      </div>
     </div>
   </header>
 
@@ -49,7 +57,7 @@
     <div class="modal-content">
       <span class="close-modal" id="close-modal">&times;</span>
       
-      <!-- Selecteur de Saisons / Épisodes (Affiché uniquement pour les séries) -->
+      <!-- Contrôles Séries (Saisons / Épisodes) -->
       <div id="tv-controls" style="display: none; padding: 10px; text-align: center; background: #16161e; border-bottom: 1px solid #333;">
         <label style="color:#aaa; font-size:0.85rem; margin-right:5px;">Saison :</label>
         <select id="season-select" onchange="onSeasonChange()" style="background:#222; color:#fff; border:1px solid #444; padding:5px; border-radius:4px; margin-right:15px;"></select>
