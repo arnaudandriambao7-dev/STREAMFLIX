@@ -3,25 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CinéStream - Plateforme de Streaming</title>
+  <title>CinéStream - Films & Séries</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Icônes FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-  <!-- En-tête / Navigation -->
+  <!-- Navigation -->
   <header class="navbar">
     <div class="logo">
       <i class="fa-solid fa-play"></i> Ciné<span>Stream</span>
     </div>
+
+    <!-- Selecteur de Type : Films ou Séries -->
+    <div class="nav-tabs" style="display: flex; gap: 15px;">
+      <button id="btn-movies" class="tab-btn active" onclick="switchMediaType('movie')" style="background:transparent; color:#fff; border:none; font-size:1rem; cursor:pointer; font-weight:600; border-bottom: 2px solid #e50914;">Films</button>
+      <button id="btn-series" class="tab-btn" onclick="switchMediaType('tv')" style="background:transparent; color:#aaa; border:none; font-size:1rem; cursor:pointer; font-weight:600;">Séries TV</button>
+    </div>
+
     <div class="search-box">
       <i class="fa-solid fa-magnifying-glass search-icon"></i>
-      <input type="text" id="search-input" placeholder="Rechercher un film...">
+      <input type="text" id="search-input" placeholder="Rechercher un film ou une série...">
     </div>
   </header>
 
-  <!-- Bannière principale / Hero Section -->
+  <!-- Hero Section -->
   <section class="hero" id="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
@@ -33,26 +39,31 @@
     </div>
   </section>
 
-  <!-- Contenu principal : Les catégories s'afficheront ici dynamiquement -->
+  <!-- Contenu Principal -->
   <main class="container" id="categories-container">
-    <p style="color: #aaa; text-align: center; margin-top: 50px;">Chargement de toutes les catégories...</p>
+    <p style="color: #aaa; text-align: center; margin-top: 50px;">Chargement du catalogue...</p>
   </main>
 
-  <!-- Lecteur Vidéo Modal avec changement de serveur -->
+  <!-- Lecteur Vidéo Modal -->
   <div class="modal" id="video-modal">
     <div class="modal-content">
       <span class="close-modal" id="close-modal">&times;</span>
       
-      <!-- Boutons pour changer de serveur si le film ne se lance pas -->
-      <div class="server-selector" style="margin-bottom: 15px; text-align: center; padding-top: 10px;">
+      <!-- Selecteur de Saisons / Épisodes (Affiché uniquement pour les séries) -->
+      <div id="tv-controls" style="display: none; padding: 10px; text-align: center; background: #16161e; border-bottom: 1px solid #333;">
+        <label style="color:#aaa; font-size:0.85rem; margin-right:5px;">Saison :</label>
+        <select id="season-select" onchange="onSeasonChange()" style="background:#222; color:#fff; border:1px solid #444; padding:5px; border-radius:4px; margin-right:15px;"></select>
+        
+        <label style="color:#aaa; font-size:0.85rem; margin-right:5px;">Épisode :</label>
+        <select id="episode-select" onchange="onEpisodeChange()" style="background:#222; color:#fff; border:1px solid #444; padding:5px; border-radius:4px;"></select>
+      </div>
+
+      <!-- Selecteur de Serveurs -->
+      <div class="server-selector" style="margin: 10px 0; text-align: center;">
         <span style="font-size: 0.85rem; color: #aaa; margin-right: 10px;">Changer de lecteur :</span>
         <button onclick="changeServer(0)" style="background:#e50914; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 1</button>
         <button onclick="changeServer(1)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 2</button>
         <button onclick="changeServer(2)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 3</button>
-        <button onclick="changeServer(3)" style="background:#333; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">Serveur 4</button>
-        <button id="open-external-btn" onclick="openExternal()" style="background:#2b7fff; color:#fff; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; margin:2px;">
-  <i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir directement
-</button>
       </div>
 
       <div class="iframe-container">
