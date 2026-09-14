@@ -4,17 +4,17 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
-// Lecteurs vidéo compatibles Films et Séries
+// Lecteurs vidéo optimisés pour le contenu multilingue / VF
 const PLAYERS = {
   movie: [
-    { name: 'AutoEmbed', url: 'https://player.autoembed.cc/embed/movie/' },
-    { name: 'VidSrc me', url: 'https://vidsrc.me/embed/movie?tmdb=' },
-    { name: '2Embed', url: 'https://www.2embed.cc/embed/' }
+    { name: 'Lecteur 1 (VF / Multi)', url: 'https://vidsrc.me/embed/movie?tmdb=' },
+    { name: 'Lecteur 2 (AutoEmbed)', url: 'https://player.autoembed.cc/embed/movie/' },
+    { name: 'Lecteur 3 (SuperEmbed)', url: 'https://multiembed.mov/?video_id=' }
   ],
   tv: [
-    { name: 'AutoEmbed', url: (id, s, e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}` },
-    { name: 'VidSrc me', url: (id, s, e) => `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
-    { name: '2Embed', url: (id, s, e) => `https://www.2embed.cc/embed/tv/${id}/${s}/${e}` }
+    { name: 'Lecteur 1 (VF / Multi)', url: (id, s, e) => `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
+    { name: 'Lecteur 2 (AutoEmbed)', url: (id, s, e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}` },
+    { name: 'Lecteur 3 (SuperEmbed)', url: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` }
   ]
 };
 
@@ -63,11 +63,11 @@ function switchMediaType(type) {
   init();
 }
 
-// Requêtes TMDB
+// Requêtes TMDB forcées en Français (fr-FR) avec fallback région (FR)
 async function fetchMovies(endpoint, extraParams = '') {
   try {
     const connector = endpoint.includes('?') ? '&' : '?';
-    const res = await fetch(`${BASE_URL}${endpoint}${connector}api_key=${API_KEY}&language=fr-FR${extraParams}`);
+    const res = await fetch(`${BASE_URL}${endpoint}${connector}api_key=${API_KEY}&language=fr-FR&region=FR${extraParams}`);
     const data = await res.json();
     return data.results || [];
   } catch (error) {
@@ -76,7 +76,7 @@ async function fetchMovies(endpoint, extraParams = '') {
   }
 }
 
-// Remplir le menu des genres
+// Remplir le menu des genres en français
 async function populateGenreDropdown() {
   if (!genreSelect) return;
   try {
@@ -176,13 +176,13 @@ function renderCategorySection(title, items) {
   if (categoriesContainer) categoriesContainer.appendChild(section);
 }
 
-// Configurer Hero Banner
+// Configurer Hero Banner en Français
 function setupHero(item) {
   const hero = document.getElementById('hero');
   if (!hero) return;
 
   document.getElementById('hero-title').textContent = item.title || item.name;
-  document.getElementById('hero-overview').textContent = item.overview || "Aucun synopsis disponible.";
+  document.getElementById('hero-overview').textContent = item.overview || "Aucun synopsis disponible en français.";
   if (item.backdrop_path) {
     hero.style.backgroundImage = `url('${HERO_IMG_URL + item.backdrop_path}')`;
   }
@@ -281,7 +281,13 @@ function onEpisodeChange() {
 function loadStream() {
   if (currentMediaType === 'movie') {
     const server = PLAYERS.movie[selectedServerIndex];
-    if (videoPlayer) videoPlayer.src = `${server.url}${activeMediaId}`;
+    if (videoPlayer) {
+      if (server.url.includes('multiembed')) {
+        videoPlayer.src = `${server.url}${activeMediaId}&tmdb=1`;
+      } else {
+        videoPlayer.src = `${server.url}${activeMediaId}`;
+      }
+    }
   } else {
     const server = PLAYERS.tv[selectedServerIndex];
     if (videoPlayer) videoPlayer.src = server.url(activeMediaId, currentSeason, currentEpisode);
