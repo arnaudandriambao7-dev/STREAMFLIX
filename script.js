@@ -7,10 +7,10 @@ const HERO_IMG_URL = 'https://image.tmdb.org/t/p/original';
 
 // Serveurs vidéo de secours mis à jour
 const PLAYERS = [
-  { name: 'Lecteur 1 (Vidbinge)', url: 'https://vidbinge.dev/embed/movie/' },
-  { name: 'Lecteur 2 (VidSrc Pro)', url: 'https://vidsrc.pro/embed/movie/' },
-  { name: 'Lecteur 3 (SuperEmbed)', url: 'https://multiembed.mov/?video_id=' },
-  { name: 'Lecteur 4 (AutoEmbed)', url: 'https://player.autoembed.cc/embed/movie/' }
+  { name: 'Lecteur 1 (SuperEmbed)', url: 'https://multiembed.mov/?video_id=' },
+  { name: 'Lecteur 2 (AutoEmbed)', url: 'https://player.autoembed.cc/embed/movie/' },
+  { name: 'Lecteur 3 (VidSrc me)', url: 'https://vidsrc.me/embed/movie?tmdb=' },
+  { name: 'Lecteur 4 (2Embed)', url: 'https://www.2embed.cc/embed/' }
 ];
 
 let activeMovieId = null;
